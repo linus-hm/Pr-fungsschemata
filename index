@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prüfungsschema Karteikarten</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Lora:ital,wght@0,400;0,500;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#0f1623;--navy2:#17202f;--navy3:#1e2d42;--border:#2a3d57;
+  --gold:#c9a84c;--gold2:#e8c96e;--cream:#f0e8d5;--cream2:#d4c9b0;
+  --muted:#6b7f96;--green:#4caf82;--red:#c0392b;
+  --l0:#c9a84c;--l1:#7ec8c8;--l2:#a78bdb;--l3:#e07b6a;--l4:#7db87d;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--navy);color:var(--cream);font-family:'Lora',Georgia,serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;}
+
+/* Header */
+header{width:100%;padding:14px 28px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);background:var(--navy2);flex-shrink:0;}
+header h1{font-family:'Playfair Display',serif;font-size:1.05rem;font-weight:600;color:var(--gold);letter-spacing:.04em;}
+header span{font-size:.74rem;color:var(--muted);font-style:italic;}
+
+/* Tabs */
+.tabs{display:flex;align-items:stretch;border-bottom:1px solid var(--border);background:var(--navy2);width:100%;padding:0 28px;flex-shrink:0;}
+.tab{padding:9px 18px;font-family:'Lora',serif;font-size:.8rem;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:color .2s,border-color .2s;user-select:none;white-space:nowrap;letter-spacing:.03em;}
+.tab.active{color:var(--gold);border-bottom-color:var(--gold);}
+.tab:hover:not(.active){color:var(--cream2);}
+.tab .badge{display:inline-block;background:var(--navy3);color:var(--muted);border:1px solid var(--border);border-radius:10px;padding:1px 6px;font-size:.66rem;margin-left:5px;font-family:'JetBrains Mono',monospace;vertical-align:middle;}
+.tab.active .badge{background:var(--gold);color:var(--navy);border-color:var(--gold);}
+.tabs-right{margin-left:auto;display:flex;align-items:center;gap:4px;padding-left:16px;}
+.tab-action{padding:7px 14px;font-family:'Lora',serif;font-size:.78rem;color:var(--muted);cursor:pointer;border:1px solid var(--border);border-radius:5px;margin:auto 0;white-space:nowrap;display:flex;align-items:center;gap:5px;transition:all .2s;user-select:none;background:transparent;}
+.tab-action:hover{border-color:var(--gold);color:var(--gold);}
+.tab-action.primary{border-color:var(--gold);color:var(--gold);}
+.tab-action.primary:hover{background:var(--gold);color:var(--navy);}
+
+/* Content */
+.content{width:100%;max-width:860px;padding:26px 22px;flex:1;}
+.view{display:none;flex-direction:column;gap:18px;}
+.view.active{display:flex;}
+
+/* Field */
+.field-label{font-family:'Playfair Display',serif;font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-bottom:6px;}
+input[type="text"]{background:var(--navy2);border:1px solid var(--border);border-radius:6px;color:var(--cream);font-family:'Lora',serif;font-size:.9rem;padding:9px 13px;outline:none;transition:border-color .2s;width:100%;}
+input[type="text"]:focus{border-color:var(--gold);}
+
+/* Line editor */
+.line-editor{background:var(--navy2);border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+.led-header{display:flex;align-items:center;padding:9px 13px;border-bottom:1px solid var(--border);background:var(--navy3);}
+.led-header span{font-size:.7rem;color:var(--muted);font-style:italic;flex:1;}
+.btn-add{background:transparent;border:1px solid var(--border);color:var(--muted);font-family:'Lora',serif;font-size:.76rem;padding:4px 11px;border-radius:4px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:4px;}
+.btn-add:hover{border-color:var(--gold);color:var(--gold);}
+.lines-list{padding:6px;}
+
+/* Schema line */
+.sline{display:flex;align-items:center;gap:5px;padding:3px 4px;border-radius:4px;transition:background .12s;}
+.sline:hover{background:var(--navy3);}
+.indent-pips{display:flex;gap:3px;align-items:center;min-width:76px;}
+.pip{width:5px;height:5px;border-radius:50%;background:var(--border);flex-shrink:0;transition:background .15s;}
+.pip.on{background:var(--gold);}
+.arw{width:26px;height:26px;display:flex;align-items:center;justify-content:center;background:var(--navy3);border:1px solid var(--border);border-radius:4px;cursor:pointer;color:var(--muted);font-size:.85rem;transition:all .13s;flex-shrink:0;user-select:none;}
+.arw:hover{border-color:var(--gold);color:var(--gold);}
+.arw:active{transform:scale(.9);}
+.bul-prev{font-family:'JetBrains Mono',monospace;font-size:.7rem;min-width:30px;text-align:right;flex-shrink:0;padding-right:4px;}
+.line-inp{flex:1;background:transparent;border:none;border-bottom:1px solid transparent;color:var(--cream);font-family:'Lora',serif;font-size:.86rem;padding:4px 5px;outline:none;transition:border-color .18s;}
+.line-inp:focus{border-bottom-color:var(--gold);}
+.line-inp::placeholder{color:var(--muted);font-style:italic;}
+.move-col{display:flex;flex-direction:column;gap:1px;flex-shrink:0;}
+.mvb{width:18px;height:11px;display:flex;align-items:center;justify-content:center;background:transparent;border:none;color:var(--border);cursor:pointer;font-size:.5rem;transition:color .12s;}
+.mvb:hover{color:var(--muted);}
+.delb{width:22px;height:22px;display:flex;align-items:center;justify-content:center;background:transparent;border:none;color:var(--border);cursor:pointer;font-size:.95rem;border-radius:3px;transition:color .13s;flex-shrink:0;}
+.delb:hover{color:var(--red);}
+
+/* Buttons */
+.btn-primary{align-self:flex-start;background:var(--gold);color:var(--navy);font-family:'Playfair Display',serif;font-size:.86rem;font-weight:600;letter-spacing:.05em;padding:10px 26px;border:none;border-radius:6px;cursor:pointer;transition:background .2s,transform .1s;}
+.btn-primary:hover{background:var(--gold2);}
+.btn-primary:active{transform:scale(.97);}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--muted);font-family:'Lora',serif;font-size:.8rem;padding:10px 16px;border-radius:6px;cursor:pointer;transition:border-color .2s,color .2s;}
+.btn-ghost:hover{border-color:var(--muted);color:var(--cream2);}
+.btn-gold-ghost{background:transparent;border:1px solid var(--gold);color:var(--gold);font-family:'Playfair Display',serif;font-size:.86rem;font-weight:600;padding:10px 22px;border-radius:6px;cursor:pointer;transition:all .2s;}
+.btn-gold-ghost:hover{background:var(--gold);color:var(--navy);}
+
+/* Card view */
+.card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;}
+.card-title{font-family:'Playfair Display',serif;font-size:1.25rem;font-weight:700;color:var(--cream);line-height:1.3;flex:1;}
+.card-sub{font-size:.76rem;color:var(--muted);font-style:italic;margin-top:3px;}
+.prog-wrap{display:flex;align-items:center;gap:9px;}
+.prog-bar{width:100px;height:3px;background:var(--border);border-radius:2px;overflow:hidden;}
+.prog-fill{height:100%;background:var(--gold);border-radius:2px;transition:width .4s ease;}
+.prog-txt{font-family:'JetBrains Mono',monospace;font-size:.68rem;color:var(--muted);white-space:nowrap;}
+.schema-box{background:var(--navy2);border:1px solid var(--border);border-radius:10px;padding:22px 26px;min-height:240px;position:relative;overflow:hidden;cursor:pointer;}
+.schema-box::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--gold),transparent);}
+.step-line{display:flex;align-items:baseline;padding:3px 0;opacity:0;transform:translateY(5px);transition:opacity .3s ease,transform .3s ease;line-height:1.65;}
+.step-line.vis{opacity:1;transform:translateY(0);}
+.step-line.old{opacity:.4;}
+.step-bullet{font-family:'JetBrains Mono',monospace;font-size:.78rem;font-weight:500;flex-shrink:0;min-width:2em;}
+.step-text{font-family:'Lora',serif;font-size:.9rem;flex:1;}
+.lvl-0 .step-bullet{color:var(--l0);}.lvl-0 .step-text{color:var(--cream);font-weight:500;}
+.lvl-1 .step-bullet{color:var(--l1);}.lvl-1 .step-text{color:var(--cream2);}
+.lvl-2 .step-bullet{color:var(--l2);}.lvl-2 .step-text{color:var(--cream2);font-size:.86rem;}
+.lvl-3 .step-bullet{color:var(--l3);}.lvl-3 .step-text{color:var(--cream2);font-size:.84rem;}
+.lvl-4 .step-bullet{color:var(--l4);}.lvl-4 .step-text{color:var(--cream2);font-size:.82rem;}
+.step-line.cur .step-text{color:var(--cream)!important;}
+.step-line.cur .step-bullet{filter:brightness(1.3);}
+.step-line.cur .step-text::after{content:'▊';font-size:.68em;color:var(--gold);animation:blink 1s step-end infinite;margin-left:3px;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+.ctrl-row{display:flex;gap:9px;flex-wrap:wrap;}
+.btn-reveal{flex:1;min-width:140px;background:var(--navy3);border:1px solid var(--gold);color:var(--gold);font-family:'Playfair Display',serif;font-size:.88rem;font-weight:600;padding:12px 18px;border-radius:8px;cursor:pointer;transition:background .2s,color .2s,transform .1s;display:flex;align-items:center;justify-content:center;gap:6px;}
+.btn-reveal:hover{background:var(--gold);color:var(--navy);}
+.btn-reveal:active{transform:scale(.97);}
+.btn-reveal:disabled{opacity:.28;cursor:not-allowed;border-color:var(--border);color:var(--muted);}
+.btn-reveal:disabled:hover{background:var(--navy3);color:var(--muted);}
+.done-banner{display:none;background:linear-gradient(135deg,#1a3a2a,#0f2318);border:1px solid #2d6b4a;border-radius:8px;padding:12px 16px;color:var(--green);font-family:'Playfair Display',serif;font-size:.86rem;text-align:center;}
+.done-banner.vis{display:block;}
+.kbd-hint{text-align:center;font-size:.7rem;color:var(--muted);font-style:italic;}
+kbd{font-family:'JetBrains Mono',monospace;font-style:normal;background:var(--navy3);border:1px solid var(--border);border-radius:3px;padding:1px 4px;font-size:.67rem;}
+
+/* Library */
+.lib-empty{text-align:center;padding:50px 20px;color:var(--muted);font-style:italic;}
+.lib-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;}
+.lib-card{background:var(--navy2);border:1px solid var(--border);border-radius:10px;padding:16px 18px;cursor:pointer;transition:border-color .2s,transform .14s;position:relative;overflow:hidden;}
+.lib-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--gold),transparent);opacity:.5;}
+.lib-card:hover{border-color:var(--gold);transform:translateY(-2px);}
+.lib-card h3{font-family:'Playfair Display',serif;font-size:.9rem;font-weight:600;color:var(--cream);margin-bottom:5px;line-height:1.3;padding-right:44px;}
+.lib-card .lc-meta{font-size:.7rem;color:var(--muted);font-family:'JetBrains Mono',monospace;display:flex;gap:10px;}
+.lib-card .lc-preview{margin-top:8px;font-size:.73rem;color:var(--cream2);font-style:italic;line-height:1.5;opacity:.65;}
+.lc-del{position:absolute;top:9px;right:9px;background:transparent;border:none;color:var(--border);cursor:pointer;font-size:.88rem;padding:2px 5px;border-radius:3px;transition:color .13s;}
+.lc-del:hover{color:var(--red);}
+.lc-edit{position:absolute;top:9px;right:30px;background:transparent;border:none;color:var(--border);cursor:pointer;font-size:.76rem;padding:2px 5px;border-radius:3px;transition:color .13s;}
+.lc-edit:hover{color:var(--gold);}
+.lib-top{display:flex;align-items:center;gap:10px;}
+.lib-sort{background:var(--navy2);border:1px solid var(--border);color:var(--cream2);font-family:'Lora',serif;font-size:.76rem;padding:6px 10px;border-radius:5px;cursor:pointer;outline:none;}
+
+/* Export reminder banner */
+.save-banner{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--navy3);border-top:1px solid var(--gold);padding:10px 24px;z-index:100;align-items:center;gap:12px;flex-wrap:wrap;}
+.save-banner.vis{display:flex;}
+.save-banner-txt{flex:1;font-size:.8rem;color:var(--cream2);}
+.save-banner-txt strong{color:var(--gold);}
+.sb-close{background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:1.1rem;padding:2px 6px;flex-shrink:0;}
+
+/* Modal */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;align-items:center;justify-content:center;padding:16px;}
+.modal-overlay.open{display:flex;}
+.modal-box{background:var(--navy2);border:1px solid var(--border);border-radius:12px;width:100%;max-width:520px;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.5);}
+.modal-top{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);}
+.modal-title{font-family:'Playfair Display',serif;font-size:1rem;font-weight:600;color:var(--gold);}
+.modal-close{background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:1.3rem;padding:0 4px;transition:color .15s;}
+.modal-close:hover{color:var(--cream);}
+.modal-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);}
+.modal-tab{flex:1;padding:10px;text-align:center;font-family:'Lora',serif;font-size:.8rem;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;}
+.modal-tab.active{color:var(--gold);border-bottom-color:var(--gold);}
+.modal-body{padding:20px;}
+
+/* Export options */
+.exp-opts{display:flex;flex-direction:column;gap:10px;}
+.exp-opt{display:flex;align-items:center;gap:14px;padding:13px 16px;background:var(--navy3);border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:border-color .15s,background .15s;}
+.exp-opt:hover{border-color:var(--gold);background:rgba(201,168,76,.07);}
+.exp-icon{font-size:1.5rem;flex-shrink:0;}
+.exp-info{flex:1;}
+.exp-title{font-family:'Playfair Display',serif;font-size:.9rem;font-weight:600;color:var(--cream);}
+.exp-desc{font-size:.74rem;color:var(--muted);margin-top:2px;}
+.exp-badge{font-family:'JetBrains Mono',monospace;font-size:.66rem;color:var(--muted);background:var(--border);border-radius:3px;padding:2px 6px;flex-shrink:0;}
+
+/* Import */
+.import-zone{position:relative;border:2px dashed var(--border);border-radius:8px;padding:28px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;margin-bottom:14px;}
+.import-zone:hover,.import-zone.drag{border-color:var(--gold);background:rgba(201,168,76,.05);}
+.import-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.import-zone p{font-size:.82rem;color:var(--muted);}
+.import-zone strong{font-size:1.1rem;color:var(--cream2);display:block;margin-bottom:6px;}
+.import-modes{display:flex;flex-direction:column;gap:8px;}
+.import-modes label{display:flex;align-items:center;gap:8px;cursor:pointer;font-size:.82rem;color:var(--cream2);}
+.import-modes input[type=radio]{accent-color:var(--gold);}
+.import-status{margin-top:12px;font-size:.8rem;padding:8px 12px;border-radius:5px;display:none;}
+.import-status.ok{display:block;background:#1a3a2a;color:var(--green);border:1px solid #2d6b4a;}
+.import-status.err{display:block;background:#3a1a1a;color:#e07b6a;border:1px solid #6b2d2d;}
+
+/* APKG progress */
+.apkg-progress{display:none;flex-direction:column;gap:10px;padding:16px;background:var(--navy3);border-radius:8px;margin-top:10px;}
+.apkg-progress.vis{display:flex;}
+.apkg-progress .ap-label{font-size:.8rem;color:var(--cream2);}
+.apkg-progress .ap-bar{height:4px;background:var(--border);border-radius:2px;overflow:hidden;}
+.apkg-progress .ap-fill{height:100%;background:var(--gold);border-radius:2px;transition:width .3s;width:0%;}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--navy3);border:1px solid var(--border);border-radius:8px;padding:10px 16px;font-size:.8rem;color:var(--cream2);z-index:300;transform:translateY(20px);opacity:0;transition:all .25s;max-width:280px;}
+.toast.vis{transform:translateY(0);opacity:1;}
+.toast.ok{border-color:var(--green);color:var(--green);}
+.toast.err{border-color:#e07b6a;color:#e07b6a;}
+
+@media(max-width:600px){
+  .content{padding:16px 12px;}
+  header{padding:12px 14px;}
+  .tabs{padding:0 14px;}
+  .schema-box{padding:18px 14px;}
+  .tabs-right{padding-left:8px;}
+  .tab-action{padding:5px 9px;font-size:.72rem;}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 8h10M7 12h7M7 16h5"/></svg>
+  <div><h1>Prüfungsschema Karteikarten</h1><span>Steuern &amp; Wirtschaftsprüfung · Jura</span></div>
+</header>
+
+<div class="tabs">
+  <div class="tab active" id="tab-editor" onclick="showTab('editor')">✏ Schema eingeben</div>
+  <div class="tab" id="tab-card" onclick="showTab('card')">▶ Karteikarte</div>
+  <div class="tab" id="tab-library" onclick="showTab('library')">📚 Bibliothek <span class="badge" id="lib-badge">0</span></div>
+  <div class="tabs-right">
+    <div class="tab-action" onclick="openModal('import')">⬇ Import</div>
+    <div class="tab-action primary" onclick="openModal('export')">⬆ Export</div>
+  </div>
+</div>
+
+<div class="content">
+
+<!-- EDITOR -->
+<div class="view active" id="view-editor">
+  <div>
+    <div class="field-label">Titel der Karteikarte</div>
+    <input type="text" id="inp-title" placeholder="z. B. § 433 BGB – Anspruch des Käufers auf Übergabe und Übereignung">
+  </div>
+  <div>
+    <div class="field-label">Prüfungsschema</div>
+    <div class="line-editor">
+      <div class="led-header">
+        <span>← Ausrücken / Einrücken → · ↑↓ verschieben · × löschen · <kbd style="font-family:'JetBrains Mono',monospace;background:var(--navy);border:1px solid var(--border);padding:1px 4px;border-radius:2px;font-size:.65rem;">Tab</kbd> / <kbd style="font-family:'JetBrains Mono',monospace;background:var(--navy);border:1px solid var(--border);padding:1px 4px;border-radius:2px;font-size:.65rem;">Enter</kbd></span>
+        <button class="btn-add" onclick="addLine()">＋ Zeile</button>
+      </div>
+      <div class="lines-list" id="lines-list"></div>
+    </div>
+  </div>
+  <div style="display:flex;gap:9px;flex-wrap:wrap;align-items:center;">
+    <button class="btn-primary" onclick="buildCard()">Karteikarte erstellen →</button>
+    <button class="btn-gold-ghost" id="btn-save" onclick="saveCard()">💾 Speichern</button>
+    <button class="btn-ghost" onclick="saveAndNew()">💾＋ Speichern &amp; neue Karte</button>
+    <button class="btn-ghost" onclick="newCard()">＋ Neue Karte</button>
+  </div>
+</div>
+
+<!-- CARD -->
+<div class="view" id="view-card">
+  <div class="card-head">
+    <div><div class="card-title" id="card-title">–</div><div class="card-sub">Prüfungsschema · Klicken zum Aufdecken</div></div>
+    <div class="prog-wrap"><div class="prog-bar"><div class="prog-fill" id="prog-fill"></div></div><div class="prog-txt" id="prog-txt">0 / 0</div></div>
+  </div>
+  <div class="schema-box" id="schema-box" onclick="revealNext()"></div>
+  <div class="done-banner" id="done-banner">✓ Schema vollständig aufgedeckt</div>
+  <div class="ctrl-row">
+    <button class="btn-reveal" id="btn-reveal" onclick="revealNext()">Nächster Schritt <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg></button>
+    <button class="btn-ghost" onclick="resetCard()">↺ Zurücksetzen</button>
+    <button class="btn-ghost" onclick="showTab('editor')">✏ Bearbeiten</button>
+    <button class="btn-ghost" onclick="showTab('library')">📚 Bibliothek</button>
+  </div>
+  <div class="kbd-hint"><kbd>Leertaste</kbd> oder <kbd>→</kbd> aufdecken &nbsp;·&nbsp; <kbd>R</kbd> zurücksetzen</div>
+</div>
+
+<!-- LIBRARY -->
+<div class="view" id="view-library">
+  <div class="lib-top">
+    <span style="font-family:'Playfair Display',serif;font-size:.95rem;color:var(--cream);flex:1;">Gespeicherte Karteikarten</span>
+    <select class="lib-sort" id="lib-sort" onchange="renderLibrary()">
+      <option value="newest">Neueste zuerst</option>
+      <option value="oldest">Älteste zuerst</option>
+      <option value="az">A–Z</option>
+    </select>
+    <button class="btn-ghost" style="font-size:.76rem;padding:6px 12px;" onclick="newCard()">＋ Neue Karte</button>
+  </div>
+  <div id="lib-container"></div>
+  <div id="lib-export-cta" style="display:none;background:var(--navy3);border:1px solid var(--border);border-radius:8px;padding:14px 18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+    <span style="font-size:.8rem;color:var(--cream2);flex:1;">💡 <strong style="color:var(--gold)">Nicht vergessen:</strong> Exportiere deine Karten regelmäßig als Backup oder für Anki.</span>
+    <button class="btn-ghost" style="font-size:.76rem;padding:6px 12px;" onclick="openModal('export')">⬆ Exportieren</button>
+  </div>
+</div>
+
+</div><!-- /content -->
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal" onclick="modalBgClick(event)">
+  <div class="modal-box">
+    <div class="modal-top">
+      <div class="modal-title" id="modal-title">Export / Import</div>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-tabs">
+      <div class="modal-tab active" id="mtab-export" onclick="switchModalTab('export')">⬆ Export</div>
+      <div class="modal-tab" id="mtab-import" onclick="switchModalTab('import')">⬇ Import</div>
+    </div>
+    <div class="modal-body">
+
+      <!-- Export panel -->
+      <div id="mpanel-export">
+        <div class="exp-opts">
+          <div class="exp-opt" onclick="exportJSON()">
+            <div class="exp-icon">💾</div>
+            <div class="exp-info"><div class="exp-title">Backup (JSON)</div><div class="exp-desc">Vollständige Sicherung aller Karten · Für Re-Import in diese App</div></div>
+          </div>
+          <div class="exp-opt" onclick="exportTXT()">
+            <div class="exp-icon">📄</div>
+            <div class="exp-info"><div class="exp-title">Textdatei (TXT)</div><div class="exp-desc">Lesbare Datei mit allen Schemata · Auch importierbar</div></div>
+          </div>
+          <div class="exp-opt" id="exp-apkg-btn" onclick="exportAPKG()">
+            <div class="exp-icon">🃏</div>
+            <div class="exp-info"><div class="exp-title">Anki-Stapel (APKG)</div><div class="exp-desc">Direkt importierbar in Anki · Interaktive Aufdeckkarten</div></div>
+            <div class="exp-badge">Benötigt Internet</div>
+          </div>
+        </div>
+        <div class="apkg-progress" id="apkg-progress">
+          <div class="ap-label" id="apkg-label">Lade Bibliotheken…</div>
+          <div class="ap-bar"><div class="ap-fill" id="apkg-fill"></div></div>
+        </div>
+      </div>
+
+      <!-- Import panel -->
+      <div id="mpanel-import" style="display:none;">
+        <div class="import-zone" id="import-zone">
+          <strong>📂 Datei auswählen</strong>
+          <p>JSON-Backup, TXT-Export oder hier ablegen</p>
+          <input type="file" id="import-file" accept=".json,.txt" onchange="handleImportFile(this.files[0])">
+        </div>
+        <div class="import-modes">
+          <label><input type="radio" name="import-mode" value="merge" checked> Zusammenführen <span style="color:var(--muted);font-size:.75rem;">(bestehende Karten behalten)</span></label>
+          <label><input type="radio" name="import-mode" value="replace"> Ersetzen <span style="color:var(--muted);font-size:.75rem;">(alle bestehenden Karten löschen)</span></label>
+        </div>
+        <div class="import-status" id="import-status"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── CONSTANTS ──────────────────────────────────────────────────
+const ROMAN  = ['I','II','III','IV','V','VI','VII','VIII','IX','X'];
+const ALPHA  = ['A','B','C','D','E','F','G','H','I','J'];
+const NUM    = ['1','2','3','4','5','6','7','8','9'];
+const LOWER  = ['a','b','c','d','e','f','g','h'];
+const LOWER2 = ['aa','bb','cc','dd','ee'];
+
+// ── STATE ──────────────────────────────────────────────────────
+let lines    = [];   // [{indent:0-4, text:''}]
+let editingId = null;
+let steps    = [];
+let curStep  = -1;
+
+// ── UTILS ──────────────────────────────────────────────────────
+function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function getLibrary(){ try{ return JSON.parse(localStorage.getItem('ps_lib')||'[]'); }catch{ return []; } }
+function setLibrary(a){ localStorage.setItem('ps_lib', JSON.stringify(a)); updateBadge(); }
+
+// ── TABS ────────────────────────────────────────────────────────
+function showTab(name){
+  ['editor','card','library'].forEach(n=>{
+    document.getElementById('view-'+n).classList.toggle('active', n===name);
+    document.getElementById('tab-'+n).classList.toggle('active', n===name);
+  });
+  if(name==='library') renderLibrary();
+}
+
+// ── BADGE ───────────────────────────────────────────────────────
+function updateBadge(){
+  const n = getLibrary().length;
+  document.getElementById('lib-badge').textContent = n;
+  const cta = document.getElementById('lib-export-cta');
+  if(cta) cta.style.display = n>0 ? 'flex' : 'none';
+}
+
+// ── LINE EDITOR ─────────────────────────────────────────────────
+function addLine(indent=0, text=''){
+  lines.push({indent, text});
+  renderLines();
+}
+function deleteLine(i){
+  if(lines.length<=1) return;
+  lines.splice(i,1);
+  renderLines();
+}
+function moveUp(i){ if(i===0) return; [lines[i-1],lines[i]]=[lines[i],lines[i-1]]; renderLines(); }
+function moveDown(i){ if(i>=lines.length-1) return; [lines[i],lines[i+1]]=[lines[i+1],lines[i]]; renderLines(); }
+function indent(i, d){ lines[i].indent = Math.max(0,Math.min(4, lines[i].indent+d)); renderLines(); }
+function updateText(i, v){ lines[i].text = v; }
+
+function getBullet(idx){
+  const lvl = lines[idx].indent;
+  let count = 0;
+  for(let k=0;k<idx;k++){
+    if(lines[k].indent < lvl) count=0;
+    if(lines[k].indent === lvl) count++;
+  }
+  switch(lvl){
+    case 0: return (ROMAN[count]||'?')+'.';
+    case 1: return (ALPHA[count]||'?')+'.';
+    case 2: return (count+1)+'.';
+    case 3: return (LOWER[count]||'?')+')';
+    case 4: return (LOWER2[count]||'??')+')';
+  }
+}
+
+function renderLines(){
+  const list = document.getElementById('lines-list');
+  list.innerHTML = '';
+  lines.forEach((line,i)=>{
+    const lvl = line.indent;
+    const color = `var(--l${lvl})`;
+    const bullet = getBullet(i);
+    let pips='';
+    for(let p=0;p<4;p++) pips+=`<div class="pip${p<lvl?' on':''}"></div>`;
+    const row = document.createElement('div');
+    row.className='sline';
+    row.innerHTML=`
+      <div class="indent-pips">${pips}</div>
+      <div class="arw" title="Ausrücken (links)" onclick="indent(${i},-1)">←</div>
+      <div class="arw" title="Einrücken (rechts)" onclick="indent(${i},1)">→</div>
+      <span class="bul-prev" style="color:${color}">${bullet}</span>
+      <input class="line-inp" type="text" value="${esc(line.text)}" placeholder="Text…"
+        oninput="updateText(${i},this.value)"
+        onkeydown="lineKey(event,${i})">
+      <div class="move-col">
+        <button class="mvb" onclick="moveUp(${i})" title="Hoch">▲</button>
+        <button class="mvb" onclick="moveDown(${i})" title="Runter">▼</button>
+      </div>
+      <button class="delb" onclick="deleteLine(${i})" title="Löschen">×</button>`;
+    list.appendChild(row);
+  });
+}
+
+function lineKey(e,i){
+  if(e.key==='Enter'){
+    e.preventDefault();
+    lines.splice(i+1,0,{indent:lines[i].indent, text:''});
+    renderLines();
+    setTimeout(()=>{ const inp=document.querySelectorAll('.line-inp'); if(inp[i+1]) inp[i+1].focus(); },30);
+  }
+  if(e.key==='Tab'){
+    e.preventDefault();
+    indent(i, e.shiftKey?-1:1);
+    setTimeout(()=>{ const inp=document.querySelectorAll('.line-inp'); if(inp[i]) inp[i].focus(); },30);
+  }
+  if(e.key==='Backspace' && lines[i].text==='' && lines.length>1){
+    e.preventDefault();
+    deleteLine(i);
+    setTimeout(()=>{ const inp=document.querySelectorAll('.line-inp'); if(inp[Math.max(0,i-1)]) inp[Math.max(0,i-1)].focus(); },30);
+  }
+}
+
+// ── CARD BUILD & REVEAL ─────────────────────────────────────────
+function buildCard(){
+  const title = document.getElementById('inp-title').value.trim() || 'Prüfungsschema';
+  steps   = lines.map((l,i)=>({indent:l.indent, bullet:getBullet(i), text:l.text}));
+  curStep = -1;
+  document.getElementById('card-title').textContent = title;
+  const box = document.getElementById('schema-box');
+  box.innerHTML = '';
+  steps.forEach((s,i)=>{
+    const d = document.createElement('div');
+    d.className = `step-line lvl-${s.indent}`;
+    d.id = `sl-${i}`;
+    d.innerHTML = `<span class="step-bullet" style="padding-left:${s.indent*18}px">${s.bullet}</span><span class="step-text">${esc(s.text)}</span>`;
+    box.appendChild(d);
+  });
+  updateProg();
+  document.getElementById('done-banner').classList.remove('vis');
+  document.getElementById('btn-reveal').disabled = false;
+  showTab('card');
+}
+
+function revealNext(){
+  if(curStep>=steps.length-1) return;
+  if(curStep>=0){
+    const p=document.getElementById(`sl-${curStep}`);
+    p.classList.remove('cur'); p.classList.add('old');
+  }
+  curStep++;
+  const el=document.getElementById(`sl-${curStep}`);
+  el.classList.add('vis','cur');
+  el.scrollIntoView({behavior:'smooth',block:'nearest'});
+  updateProg();
+  if(curStep===steps.length-1){
+    document.getElementById('btn-reveal').disabled=true;
+    document.getElementById('done-banner').classList.add('vis');
+    setTimeout(()=>{ el.classList.remove('cur'); el.classList.add('old'); },1200);
+  }
+}
+
+function resetCard(){
+  curStep=-1;
+  document.querySelectorAll('.step-line').forEach(el=>el.classList.remove('vis','cur','old'));
+  document.getElementById('done-banner').classList.remove('vis');
+  document.getElementById('btn-reveal').disabled=false;
+  updateProg();
+}
+
+function updateProg(){
+  const t=steps.length, d=curStep+1;
+  const pct=t>0?(d/t)*100:0;
+  document.getElementById('prog-fill').style.width=pct+'%';
+  document.getElementById('prog-txt').textContent=`${d} / ${t}`;
+}
+
+document.addEventListener('keydown',e=>{
+  if(!document.getElementById('view-card').classList.contains('active')) return;
+  if(e.key===' '||e.key==='ArrowRight'){ e.preventDefault(); revealNext(); }
+  if(e.key==='r'||e.key==='R') resetCard();
+});
+
+// ── LIBRARY ─────────────────────────────────────────────────────
+function saveCard(){
+  const title = document.getElementById('inp-title').value.trim();
+  if(!title){ toast('Bitte erst einen Titel eingeben.','err'); return; }
+  if(lines.every(l=>!l.text.trim())){ toast('Schema ist noch leer.','err'); return; }
+  const lib = getLibrary();
+  const card = {id: editingId||Date.now().toString(), title, lines: JSON.parse(JSON.stringify(lines)), savedAt: Date.now()};
+  if(editingId){ const idx=lib.findIndex(c=>c.id===editingId); if(idx>=0)lib[idx]=card; else lib.push(card); }
+  else { lib.push(card); editingId=card.id; }
+  setLibrary(lib);
+  renderLibrary();
+  toast('✓ Gespeichert','ok');
+  updateBadge();
+}
+
+function loadCard(id){
+  const card = getLibrary().find(c=>c.id===id);
+  if(!card) return;
+  document.getElementById('inp-title').value=card.title;
+  lines=JSON.parse(JSON.stringify(card.lines));
+  editingId=card.id;
+  renderLines();
+  buildCard();
+}
+
+function editCard(id){
+  const card = getLibrary().find(c=>c.id===id);
+  if(!card) return;
+  document.getElementById('inp-title').value=card.title;
+  lines=JSON.parse(JSON.stringify(card.lines));
+  editingId=card.id;
+  renderLines();
+  showTab('editor');
+}
+
+function deleteCard(id){
+  if(!confirm('Karteikarte wirklich löschen?')) return;
+  setLibrary(getLibrary().filter(c=>c.id!==id));
+  if(editingId===id) editingId=null;
+  renderLibrary(); updateBadge();
+}
+
+function saveAndNew(){
+  const title = document.getElementById('inp-title').value.trim();
+  if(!title){ toast('Bitte erst einen Titel eingeben.','err'); return; }
+  if(lines.every(l=>!l.text.trim())){ toast('Schema ist noch leer.','err'); return; }
+  saveCard();
+  setTimeout(()=>{ newCard(); toast('✓ Gespeichert – neue Karte bereit','ok'); }, 100);
+}
+
+function newCard(){
+  editingId=null;
+  document.getElementById('inp-title').value='';
+  lines=[]; addLine(0,'');
+  showTab('editor');
+}
+
+function renderLibrary(){
+  const cont = document.getElementById('lib-container');
+  let lib = getLibrary();
+  const sort = document.getElementById('lib-sort').value;
+  if(sort==='newest') lib=[...lib].reverse();
+  else if(sort==='az') lib=[...lib].sort((a,b)=>a.title.localeCompare(b.title,'de'));
+
+  if(!lib.length){
+    cont.innerHTML=`<div class="lib-empty">📋 Noch keine gespeicherten Karten.<br>Erstelle deine erste Karteikarte im Editor.</div>`;
+    return;
+  }
+  cont.innerHTML=`<div class="lib-grid">${lib.map(card=>{
+    const prev=card.lines.slice(0,3).map(l=>'·'.repeat(l.indent+1)+' '+esc(l.text)).join('<br>');
+    const date=new Date(card.savedAt).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'2-digit'});
+    return `<div class="lib-card" onclick="loadCard('${card.id}')">
+      <button class="lc-del" onclick="event.stopPropagation();deleteCard('${card.id}')" title="Löschen">×</button>
+      <button class="lc-edit" onclick="event.stopPropagation();editCard('${card.id}')" title="Bearbeiten">✏</button>
+      <h3>${esc(card.title)}</h3>
+      <div class="lc-meta"><span>${card.lines.length} Schritte</span><span>${date}</span></div>
+      <div class="lc-preview">${prev}</div>
+    </div>`;
+  }).join('')}</div>`;
+  updateBadge();
+}
+
+// ── MODAL ────────────────────────────────────────────────────────
+function openModal(tab='export'){
+  document.getElementById('modal').classList.add('open');
+  switchModalTab(tab);
+}
+function closeModal(){ document.getElementById('modal').classList.remove('open'); }
+function modalBgClick(e){ if(e.target.id==='modal') closeModal(); }
+function switchModalTab(tab){
+  ['export','import'].forEach(t=>{
+    document.getElementById('mtab-'+t).classList.toggle('active',t===tab);
+    document.getElementById('mpanel-'+t).style.display = t===tab?'block':'none';
+  });
+  document.getElementById('import-status').className='import-status';
+}
+
+// ── EXPORT ───────────────────────────────────────────────────────
+function exportJSON(){
+  const lib = getLibrary();
+  if(!lib.length){ toast('Bibliothek ist leer.','err'); return; }
+  download(JSON.stringify({version:1, exportedAt:new Date().toISOString(), cards:lib},null,2),
+    `pruefungsschemata_backup_${dateStamp()}.json`, 'application/json');
+  sessionStorage.setItem('exported','1');
+  toast('✓ JSON-Backup exportiert','ok');
+}
+
+function exportTXT(){
+  const lib = getLibrary();
+  if(!lib.length){ toast('Bibliothek ist leer.','err'); return; }
+  const lines_txt = lib.map(card=>{
+    const schema = card.lines.map((l,i)=>{
+      const pad='  '.repeat(l.indent);
+      const bul = getBulletFromLines(card.lines, i);
+      return `${pad}${bul} ${l.text}`;
+    }).join('\n');
+    return `=== ${card.title} ===\n${schema}\n`;
+  }).join('\n');
+  download(lines_txt, `pruefungsschemata_${dateStamp()}.txt`, 'text/plain;charset=utf-8');
+  sessionStorage.setItem('exported','1');
+  toast('✓ TXT exportiert','ok');
+}
+
+function getBulletFromLines(lns, idx){
+  const lvl=lns[idx].indent;
+  let c=0;
+  for(let k=0;k<idx;k++){
+    if(lns[k].indent<lvl) c=0;
+    if(lns[k].indent===lvl) c++;
+  }
+  switch(lvl){
+    case 0: return (ROMAN[c]||'?')+'.';
+    case 1: return (ALPHA[c]||'?')+'.';
+    case 2: return (c+1)+'.';
+    case 3: return (LOWER[c]||'?')+')';
+    case 4: return (LOWER2[c]||'??')+')';
+  }
+}
+
+async function exportAPKG(){
+  const lib = getLibrary();
+  if(!lib.length){ toast('Bibliothek ist leer.','err'); return; }
+
+  const prog = document.getElementById('apkg-progress');
+  const label = document.getElementById('apkg-label');
+  const fill  = document.getElementById('apkg-fill');
+  prog.classList.add('vis');
+
+  function setProgress(pct, txt){ fill.style.width=pct+'%'; label.textContent=txt; }
+
+  try {
+    setProgress(10, 'Lade sql.js…');
+    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/sql-wasm.min.js');
+    setProgress(30, 'Lade JSZip…');
+    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js');
+    setProgress(50, 'Initialisiere Datenbank…');
+    const SQL = await initSqlJs({ locateFile: f=>`https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/${f}` });
+    setProgress(65, 'Erstelle Anki-Karten…');
+    const blob = await buildAPKG(SQL, lib);
+    setProgress(95, 'Verpacke APKG…');
+    download(blob, `Pruefungsschemata_${dateStamp()}.apkg`, 'application/octet-stream');
+    setProgress(100, '✓ Fertig!');
+    setTimeout(()=>{ prog.classList.remove('vis'); fill.style.width='0%'; },1800);
+    sessionStorage.setItem('exported','1');
+    toast('✓ APKG exportiert – in Anki importieren','ok');
+  } catch(err) {
+    prog.classList.remove('vis');
+    console.error(err);
+    toast('Fehler: '+err.message+'. Bitte Internetverbindung prüfen oder JSON-Backup verwenden.','err');
+  }
+}
+
+async function buildAPKG(SQL, library){
+  const db  = new SQL.Database();
+  const now = Math.floor(Date.now()/1000);
+  const mid = 1700000001;
+  const did = 1700000002;
+
+  // Tables
+  db.run(`CREATE TABLE col (id integer primary key,crt integer not null,mod integer not null,scm integer not null,ver integer not null,dty integer not null,usn integer not null,ls integer not null,conf text not null,models text not null,decks text not null,dconf text not null,tags text not null)`);
+  db.run(`CREATE TABLE notes (id integer primary key,guid text not null,mid integer not null,mod integer not null,usn integer not null,tags text not null,flds text not null,sfld integer not null,csum integer not null,flags integer not null,data text not null)`);
+  db.run(`CREATE TABLE cards (id integer primary key,nid integer not null,did integer not null,ord integer not null,mod integer not null,usn integer not null,type integer not null,queue integer not null,due integer not null,ivl integer not null,factor integer not null,reps integer not null,lapses integer not null,left integer not null,odue integer not null,odid integer not null,flags integer not null,data text not null)`);
+  db.run(`CREATE TABLE revlog (id integer primary key,cid integer not null,usn integer not null,ease integer not null,ivl integer not null,lastIvl integer not null,factor integer not null,time integer not null,type integer not null)`);
+  db.run(`CREATE TABLE graves (usn integer not null,oid integer not null,type integer not null)`);
+  db.run(`CREATE INDEX ix_notes_usn on notes (usn)`);
+  db.run(`CREATE INDEX ix_cards_usn on cards (usn)`);
+  db.run(`CREATE INDEX ix_cards_nid on cards (nid)`);
+
+  // Templates
+  const FRONT = `<div class="ps-t">{{Titel}}</div><div class="ps-h">Prüfungsschema · Aufdecken →</div>`;
+  const BACK  = buildAnkiBack();
+  const CSS   = buildAnkiCSS();
+
+  const models = { [mid]: {
+    id:mid, name:'Prüfungsschema', type:0, mod:now, usn:-1, sortf:0, did:null,
+    tmpls:[{name:'Karteikarte',ord:0,qfmt:FRONT,afmt:BACK,did:null,bqfmt:'',bafmt:''}],
+    flds:[
+      {name:'Titel',ord:0,sticky:false,rtl:false,font:'Arial',size:20,media:[]},
+      {name:'Schema',ord:1,sticky:false,rtl:false,font:'Arial',size:20,media:[]}
+    ],
+    css:CSS, latexPre:'', latexPost:'', latexsvg:false, req:[[0,'any',[0]]]
+  }};
+
+  const decks = {
+    '1':{id:1,name:'Default',conf:1,extendNew:10,extendRev:50,usn:0,collapsed:false,newToday:[0,0],timeToday:[0,0],revToday:[0,0],lrnToday:[0,0],mod:0,desc:'',dyn:0,browserCollapsed:false},
+    [did]:{id:did,name:'Prüfungsschemata',conf:1,extendNew:10,extendRev:50,usn:-1,collapsed:false,newToday:[now,0],timeToday:[now,0],revToday:[now,0],lrnToday:[now,0],mod:now,desc:'',dyn:0,browserCollapsed:false}
+  };
+  const dconf = {'1':{id:1,name:'Default',new:{delays:[1,10],initialFactor:2500,ints:[1,4,7],order:1,perDay:20,separate:true,bury:false},rev:{ease4:1.3,fuzz:0.05,ivlFct:1,maxIvl:36500,perDay:200,minSpace:1,bury:false},lapse:{delays:[10],leechAction:0,leechFails:8,minInt:1,mult:0},autoplay:true,replayq:true,timer:0,maxTaken:60,mod:0,usn:0}};
+  const conf  = {activeDecks:[did],curDeck:did,newSpread:0,collapseTime:1200,timeLim:0,estTimes:true,dueCounts:true,curModel:String(mid),nextPos:library.length+1,sortType:'noteFld',sortBackwards:false,addToCur:true,dayLearnFirst:false};
+
+  db.run('INSERT INTO col VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)',[1,now,now,now*1000,11,0,0,0,JSON.stringify(conf),JSON.stringify(models),JSON.stringify(decks),JSON.stringify(dconf),'{}']);
+
+  for(let i=0;i<library.length;i++){
+    const card  = library[i];
+    const nid   = now*1000+i+1;
+    const cid   = now*1000+i+100001;
+    const guid  = Math.random().toString(36).slice(2,12);
+    const encoded = encodeSchema(card.lines);
+    const flds  = card.title + '\x1f' + encoded;
+    const csum  = simpleHash(card.title);
+    db.run('INSERT INTO notes VALUES (?,?,?,?,?,?,?,?,?,?,?)',[nid,guid,mid,now,-1,'',flds,card.title,csum,0,'']);
+    db.run('INSERT INTO cards VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',[cid,nid,did,0,now,-1,0,0,i+1,0,2500,0,0,0,0,0,0,'']);
+  }
+
+  const dbBytes = db.export();
+  const zip = new JSZip();
+  zip.file('collection.anki2', dbBytes);
+  zip.file('media', '{}');
+  return await zip.generateAsync({type:'blob'});
+}
+
+function encodeSchema(lines){
+  const raw = lines.map(l=>`${l.indent}${String.fromCharCode(30)}${l.text}`).join(String.fromCharCode(29));
+  return btoa(encodeURIComponent(raw).replace(/%([0-9A-F]{2})/g,(_,p)=>String.fromCharCode(parseInt(p,16))));
+}
+
+function simpleHash(s){
+  let h=0;
+  for(let i=0;i<Math.min(s.length,8);i++) h=(h*31+s.charCodeAt(i))>>>0;
+  return h;
+}
+
+function buildAnkiBack(){
+  // Note: <\/script> prevents HTML parser from closing outer script tag prematurely
+  return '{{FrontSide}}\n<hr style="border:none;border-top:1px solid #2a3d57;margin:12px 0">\n' +
+'<div class="ps-pw"><div class="ps-pb"><div id="pspf" class="ps-pf"></div></div><span id="pspc" class="ps-pt">0/0</span></div>\n' +
+'<div id="psbox" class="ps-box"></div>\n' +
+'<div id="psdone" class="ps-done" style="display:none">✓ Vollständig aufgedeckt</div>\n' +
+'<div class="ps-ctrl"><button id="psbtn" class="ps-btn" onclick="psReveal()">▶ Nächster Schritt</button>' +
+'<button class="ps-btn ps-bsm" onclick="psReset()">↺</button></div>\n' +
+'<div id="psdata" style="display:none">{{Schema}}</div>\n' +
+'<scr'+'ipt>\n' +
+'(function(){\n' +
+'var ta=document.createElement("textarea");ta.innerHTML=document.getElementById("psdata").innerHTML;var enc=ta.value.trim();\n' +
+'var steps=[];\n' +
+'try{\n' +
+'  var dec=decodeURIComponent(Array.from(atob(enc)).map(function(c){return"%"+c.charCodeAt(0).toString(16).padStart(2,"0");}).join(""));\n' +
+'  steps=dec.split(String.fromCharCode(29)).filter(Boolean).map(function(p){\n' +
+'    var s=p.indexOf(String.fromCharCode(30));\n' +
+'    return s<0?{indent:0,text:p}:{indent:parseInt(p.slice(0,s))||0,text:p.slice(s+1)};\n' +
+'  });\n' +
+'}catch(e){console.error("Schema decode error",e);}\n' +
+'var C=[0,0,0,0,0],R=["I","II","III","IV","V","VI","VII","VIII"],A=["A","B","C","D","E","F","G","H"];\n' +
+'steps.forEach(function(s){\n' +
+'  var l=s.indent;for(var k=l+1;k<5;k++)C[k]=0;var c=C[l]++;\n' +
+'  if(l===0)s.b=R[c]+".";else if(l===1)s.b=A[c]+".";else if(l===2)s.b=(c+1)+".";\n' +
+'  else if(l===3)s.b=String.fromCharCode(97+c)+")";else s.b=String.fromCharCode(97+c)+String.fromCharCode(97+c)+")";\n' +
+'});\n' +
+'var cur=-1,box=document.getElementById("psbox"),btn=document.getElementById("psbtn");\n' +
+'steps.forEach(function(s,i){\n' +
+'  var d=document.createElement("div");d.className="ps-s ps-l"+s.indent;d.id="ps"+i;\n' +
+'  d.style.paddingLeft=(s.indent*14)+"px";\n' +
+'  d.innerHTML="<span class=\\"ps-b\\">"+s.b+"<\\/span> <span class=\\"ps-tx\\">"+s.text.replace(/</g,"&lt;")+"<\\/span>";\n' +
+'  box.appendChild(d);\n' +
+'});\n' +
+'function upd(){var t=steps.length,d=cur+1;document.getElementById("pspf").style.width=(t?d/t*100:0)+"%";document.getElementById("pspc").textContent=d+"/"+t;}\n' +
+'window.psReveal=function(){\n' +
+'  if(cur>=steps.length-1)return;\n' +
+'  if(cur>=0){var p=document.getElementById("ps"+cur);p.className="ps-s ps-l"+steps[cur].indent+" ps-vis ps-old";}\n' +
+'  cur++;var el=document.getElementById("ps"+cur);el.className="ps-s ps-l"+steps[cur].indent+" ps-vis ps-cur";\n' +
+'  box.scrollTop=box.scrollHeight;\n' +
+'  if(cur===steps.length-1){btn.disabled=true;document.getElementById("psdone").style.display="block";}\n' +
+'  upd();\n' +
+'};\n' +
+'window.psReset=function(){cur=-1;btn.disabled=false;document.getElementById("psdone").style.display="none";\n' +
+'  steps.forEach(function(s,i){document.getElementById("ps"+i).className="ps-s ps-l"+s.indent;});upd();};\n' +
+'upd();\n' +
+'})();\n' +
+'<\/scr'+'ipt>';
+}
+
+function buildAnkiCSS(){
+  return '.card{background:#0f1623;color:#f0e8d5;font-family:Georgia,"Times New Roman",serif;padding:18px;max-width:580px;margin:0 auto;}' +
+'.ps-t{font-size:1.05em;font-weight:bold;color:#c9a84c;margin-bottom:5px;line-height:1.3;}' +
+'.ps-h{color:#6b7f96;font-style:italic;font-size:.8em;margin-bottom:2px;}' +
+'.ps-pw{display:flex;align-items:center;gap:10px;margin-bottom:10px;}' +
+'.ps-pb{flex:1;height:3px;background:#2a3d57;border-radius:2px;}' +
+'.ps-pf{height:100%;background:#c9a84c;border-radius:2px;transition:width .3s;}' +
+'.ps-pt{font-family:monospace;font-size:.7em;color:#6b7f96;}' +
+'.ps-box{height:300px;overflow-y:auto;background:#17202f;border-radius:7px;padding:14px;margin-bottom:10px;scroll-behavior:smooth;}' +
+'.ps-s{display:none;padding:3px 0;line-height:1.6;}' +
+'.ps-s.ps-vis{display:flex;gap:6px;align-items:baseline;}' +
+'.ps-s.ps-old{opacity:.42;}' +
+'.ps-b{font-family:monospace;min-width:2em;font-size:.8em;flex-shrink:0;}' +
+'.ps-tx{font-size:.88em;}' +
+'.ps-l0 .ps-b{color:#c9a84c;}.ps-l0 .ps-tx{color:#f0e8d5;font-weight:500;}' +
+'.ps-l1 .ps-b{color:#7ec8c8;}.ps-l1 .ps-tx{color:#d4c9b0;}' +
+'.ps-l2 .ps-b{color:#a78bdb;}.ps-l2 .ps-tx{color:#d4c9b0;}' +
+'.ps-l3 .ps-b{color:#e07b6a;}.ps-l3 .ps-tx{color:#d4c9b0;}' +
+'.ps-l4 .ps-b{color:#7db87d;}.ps-l4 .ps-tx{color:#d4c9b0;}' +
+'.ps-s.ps-cur .ps-tx{color:#f0e8d5!important;}' +
+'.ps-done{color:#4caf82;text-align:center;padding:7px;font-size:.8em;margin-bottom:8px;}' +
+'.ps-ctrl{display:flex;gap:7px;}' +
+'.ps-btn{background:#1e2d42;border:1px solid #c9a84c;color:#c9a84c;padding:8px 16px;border-radius:5px;cursor:pointer;font-family:Georgia,serif;font-size:.84em;flex:1;}' +
+'.ps-btn:hover{background:#c9a84c;color:#0f1623;}' +
+'.ps-btn:disabled{opacity:.3;cursor:not-allowed;}' +
+'.ps-bsm{flex:0;padding:8px 12px;}';
+}
+
+// ── IMPORT ───────────────────────────────────────────────────────
+function handleImportFile(file){
+  if(!file) return;
+  const mode = document.querySelector('input[name="import-mode"]:checked').value;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const text = e.target.result;
+    if(file.name.endsWith('.json')){
+      importJSON(text, mode);
+    } else if(file.name.endsWith('.txt')){
+      importTXT(text, mode);
+    } else {
+      showImportStatus('err','Unbekanntes Dateiformat. Bitte JSON oder TXT importieren.');
+    }
+  };
+  reader.readAsText(file, 'utf-8');
+}
+
+function importJSON(text, mode){
+  try{
+    const data = JSON.parse(text);
+    if(!data.cards||!Array.isArray(data.cards)) throw new Error('Kein gültiges Backup-Format.');
+    const lib = mode==='replace' ? [] : getLibrary();
+    const existing = new Set(lib.map(c=>c.id));
+    let added=0, skipped=0;
+    data.cards.forEach(c=>{
+      if(existing.has(c.id)){ skipped++; }
+      else { lib.push(c); added++; }
+    });
+    setLibrary(lib);
+    renderLibrary();
+    showImportStatus('ok',`✓ ${added} Karte(n) importiert${skipped?', '+skipped+' übersprungen (bereits vorhanden)':''}.`);
+  }catch(err){
+    showImportStatus('err','Fehler: '+err.message);
+  }
+}
+
+function importTXT(text, mode){
+  const sections = text.split(/\n?=== /);
+  let added=0;
+  const lib = mode==='replace' ? [] : getLibrary();
+  sections.forEach(sec=>{
+    sec=sec.trim(); if(!sec) return;
+    const nl = sec.indexOf('\n');
+    if(nl<0) return;
+    let title = sec.slice(0,nl).replace(/\s*===\s*$/,'').trim();
+    const body  = sec.slice(nl+1);
+    if(!title) return;
+    const lns = body.split('\n').filter(l=>l.trim());
+    if(!lns.length) return;
+    const cardLines = lns.map(l=>{
+      const spaces = l.match(/^[\s]*/)[0].replace(/\t/g,'  ').length;
+      const indent = Math.min(4, Math.floor(spaces/2));
+      const txt = l.trim().replace(/^[IVXivxABCDEFGHabc]{1,4}[.)]\s*/,'').replace(/^\d+[.)]\s*/,'');
+      return {indent, text: txt};
+    });
+    lib.push({id:Date.now().toString()+Math.random().toString(36).slice(2,6), title, lines:cardLines, savedAt:Date.now()});
+    added++;
+  });
+  setLibrary(lib);
+  renderLibrary();
+  showImportStatus('ok',`✓ ${added} Karte(n) aus TXT importiert.`);
+}
+
+function showImportStatus(type, msg){
+  const el = document.getElementById('import-status');
+  el.className='import-status '+type;
+  el.textContent=msg;
+}
+
+// ── HELPERS ──────────────────────────────────────────────────────
+function download(data, filename, type){
+  const blob = data instanceof Blob ? data : new Blob([data],{type});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=filename;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(a.href); document.body.removeChild(a); },1000);
+}
+
+function loadScript(url){
+  return new Promise((resolve,reject)=>{
+    if(document.querySelector(`script[src="${url}"]`)){ resolve(); return; }
+    const s=document.createElement('script');
+    s.src=url; s.onload=resolve; s.onerror=()=>reject(new Error(`Konnte ${url} nicht laden`));
+    document.head.appendChild(s);
+  });
+}
+
+function dateStamp(){
+  const d=new Date();
+  return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
+}
+
+let toastTimer;
+function toast(msg, type=''){
+  const el=document.getElementById('toast');
+  el.textContent=msg;
+  el.className='toast '+(type||'');
+  el.classList.add('vis');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>el.classList.remove('vis'),3000);
+}
+
+// ── DRAG DROP IMPORT ─────────────────────────────────────────────
+const zone = document.getElementById('import-zone');
+zone.addEventListener('dragover', e=>{e.preventDefault();zone.classList.add('drag');});
+zone.addEventListener('dragleave', ()=>zone.classList.remove('drag'));
+zone.addEventListener('drop', e=>{
+  e.preventDefault(); zone.classList.remove('drag');
+  const file=e.dataTransfer.files[0];
+  if(file) handleImportFile(file);
+});
+
+// ── BEFORE UNLOAD ────────────────────────────────────────────────
+window.addEventListener('beforeunload', e=>{
+  if(getLibrary().length>0 && !sessionStorage.getItem('exported')){
+    e.preventDefault();
+    e.returnValue='';
+  }
+});
+
+// ── INIT ─────────────────────────────────────────────────────────
+function init(){
+  // Start with example schema
+  lines=[
+    {indent:0,text:'Anspruch entstanden'},
+    {indent:1,text:'Tatbestand des § 433 BGB'},
+    {indent:2,text:'Kaufvertrag'},
+    {indent:3,text:'Angebot (§ 145 BGB)'},
+    {indent:3,text:'Annahme (§ 147 BGB)'},
+    {indent:2,text:'Kein Formmangel'},
+    {indent:1,text:'Rechtsfolge: Liefer- und Übereignungspflicht'},
+    {indent:0,text:'Anspruch nicht erloschen'},
+    {indent:1,text:'Kein Erlöschen durch Erfüllung (§ 362 BGB)'},
+    {indent:0,text:'Anspruch durchsetzbar'},
+    {indent:1,text:'Keine Einreden'},
+    {indent:2,text:'§ 273 BGB Zurückbehaltungsrecht?'},
+    {indent:2,text:'§ 320 BGB Einrede des nichterfüllten Vertrages?'},
+  ];
+  renderLines();
+  renderLibrary();
+  updateBadge();
+}
+
+init();
+</script>
+</body>
+</html>
